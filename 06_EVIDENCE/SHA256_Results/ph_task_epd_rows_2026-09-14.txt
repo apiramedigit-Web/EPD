@@ -1,0 +1,7 @@
+tech_team_outputs.ph_task WHERE project_code='epd' (read-only query, html_content summarised)
+
+id | task_id | assigned_user | team | phase | version | status | char_len | sha256 | created_at | updated_at | action_took_by
+395 | epd_Thinesh_ebay_ppc_performance_2026-06 | Thinesh | ebay_priors | 1 | 2 | released | 3918506 | 5b32a1687170a320d48f8331f121fc26fe7daf9bda47c58e19c934c26525b41c | 2026-07-20 15:00:19+05:30 | 2026-08-03 08:51:37+05:30 | 
+396 | epd_Jarsini_ebay_ppc_performance_2026-06 | Jarsini | ebay_priors | 1 | 2 | released | 3918506 | e9f09143c4a95fad966edf002c6d7a36d1c77cb9fc454e629eaf1c25bab68032 | 2026-07-20 15:00:19+05:30 | 2026-08-03 08:51:37+05:30 | 
+397 | epd_kobiga_ebay_ppc_performance_2026-06 | kobiga | ebay_priors | 1 | 2 | completed | 3918505 | 61530c6473d90c9241aeeaf4f01c3fda19543320a2bc7e373a6d113328998edb | 2026-07-20 15:00:19+05:30 | 2026-08-21 03:36:58+05:30 | kobiga
+398 | epd_powsteena_ebay_ppc_performance_2026-06 | powsteena | ebay_priors | 1 | 2 | released | 3918508 | a2505e152d86debb48de0ca769e416d474d149afe5474cd14cd3618e85159ca2 | 2026-07-20 15:00:19+05:30 | 2026-08-03 08:51:37+05:30 | 

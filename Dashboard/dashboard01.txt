@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>eBay PPC Performance Dashboard</title>
+<style>
+    /* ============================================================================
+   eBay PPC Performance Dashboard — style.css
+   Theme: white background, soft gray cards, blue accent, green/orange/red states
+   ========================================================================== */
+:root {
+  --bg:            #f4f6f9;
+  --surface:       #ffffff;
+  --surface-soft:  #f7f8fa;
+  --border:        #e6e9ee;
+  --text:          #1f2937;
+  --text-soft:     #6b7280;
+  --text-faint:    #9ca3af;
+  --accent:        #2563eb;
+  --accent-soft:   #eff4ff;
+  --green:         #16a34a;
+  --green-soft:    #e8f7ee;
+  --orange:        #f59e0b;
+  --orange-soft:   #fef3e2;
+  --red:           #dc2626;
+  --red-soft:      #fdeaea;
+  --gray-badge:    #e5e7eb;
+  --shadow-sm:     0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.10);
+  --shadow-md:     0 4px 12px rgba(16,24,40,.08);
+  --radius:        14px;
+  --radius-sm:     10px;
+  --gap:           18px;
+  --font:          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+.app { max-width: 1560px; margin: 0 auto; padding: 22px clamp(12px, 2.5vw, 30px) 60px; }
+
+/* ---------- Header ---------- */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 18px; flex-wrap: wrap;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm);
+  padding: 18px 22px; margin-bottom: var(--gap);
+}
+.header .brand { display: flex; align-items: center; gap: 14px; }
+.header .logo {
+  width: 44px; height: 44px; border-radius: 12px; flex: 0 0 auto;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 18px;
+}
+.header h1 { font-size: 20px; margin: 0; font-weight: 700; letter-spacing: -.2px; }
+.header .sub { color: var(--text-soft); font-size: 12.5px; margin-top: 2px; display: flex; gap: 14px; flex-wrap: wrap; }
+.header .sub b { color: var(--text); font-weight: 600; }
+.header .actions { display: flex; gap: 10px; }
+
+.btn {
+  appearance: none; border: 1px solid var(--border); background: var(--surface);
+  color: var(--text); font-family: inherit; font-size: 13px; font-weight: 600;
+  padding: 9px 15px; border-radius: var(--radius-sm); cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px; transition: .15s;
+}
+.btn:hover { background: var(--surface-soft); border-color: #d3d8e0; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.primary:hover { background: #1d4ed8; }
+.btn svg { width: 15px; height: 15px; }
+.btn.sm { padding: 6px 11px; font-size: 12px; }
+
+/* ---------- KPI cards ---------- */
+.kpi-grid {
+  display: grid; gap: 14px; margin-bottom: var(--gap);
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+}
+.kpi {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm);
+  padding: 15px 16px; display: flex; flex-direction: column; gap: 8px;
+  position: relative; overflow: hidden;
+}
+.kpi .top { display: flex; align-items: center; justify-content: space-between; }
+.kpi .label { color: var(--text-soft); font-size: 12px; font-weight: 600; text-transform: none; }
+.kpi .icon { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+.kpi .icon svg { width: 16px; height: 16px; }
+.kpi .value { font-size: 22px; font-weight: 750; letter-spacing: -.4px; line-height: 1.1; }
+.kpi .value.small { font-size: 15px; font-weight: 650; }
+.kpi.accent .icon { background: var(--accent-soft); color: var(--accent); }
+.kpi.green  .icon { background: var(--green-soft);  color: var(--green); }
+.kpi.orange .icon { background: var(--orange-soft); color: var(--orange); }
+.kpi.red    .icon { background: var(--red-soft);    color: var(--red); }
+.kpi .foot { font-size: 11px; color: var(--text-faint); }
+
+/* ---------- Panels ---------- */
+.panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm);
+  margin-bottom: var(--gap);
+}
+.panel-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 18px; border-bottom: 1px solid var(--border); flex-wrap: wrap;
+}
+.panel-head h2 { font-size: 14.5px; margin: 0; font-weight: 700; }
+.panel-head .hint { color: var(--text-faint); font-size: 11.5px; }
+.panel-body { padding: 16px 18px; }
+
+/* ---------- Filters ---------- */
+.filters { display: grid; gap: 14px 16px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 11.5px; font-weight: 600; color: var(--text-soft); }
+.field .range { display: flex; gap: 6px; align-items: center; }
+.field .range span { color: var(--text-faint); }
+select, input[type="text"], input[type="number"] {
+  font-family: inherit; font-size: 13px; color: var(--text);
+  border: 1px solid var(--border); border-radius: 9px; padding: 8px 10px;
+  background: var(--surface); width: 100%; transition: .15s;
+}
+select:focus, input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.filter-actions { display: flex; align-items: flex-end; gap: 8px; }
+
+/* ---------- Reconciliation banner ---------- */
+.recon { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 12.5px; border-radius: 10px; margin: 0 18px 16px; }
+.recon.ok  { background: var(--green-soft);  color: #0f7a37; border: 1px solid #bfe6cd; }
+.recon.bad { background: var(--red-soft);    color: #a71d1d; border: 1px solid #f2c2c2; }
+.recon b { font-weight: 700; }
+
+/* ---------- Charts ---------- */
+.charts { display: grid; gap: var(--gap); grid-template-columns: repeat(2, 1fr); }
+.chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; }
+.chart-card .panel-head { border-bottom: 1px solid var(--border); }
+.chart-wrap { padding: 12px 14px 16px; min-height: 240px; display: flex; flex-direction: column; }
+.chart-wrap svg { width: 100%; height: auto; display: block; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px 16px; margin-top: 10px; font-size: 11.5px; color: var(--text-soft); }
+.legend .li { display: flex; align-items: center; gap: 6px; }
+.legend .dot { width: 10px; height: 10px; border-radius: 3px; }
+.chart-empty { color: var(--text-faint); font-size: 12.5px; text-align: center; padding: 40px 0; }
+
+/* ---------- Table ---------- */
+.table-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 18px; border-bottom: 1px solid var(--border); }
+.table-toolbar .grow { flex: 1 1 auto; }
+.table-toolbar .search { max-width: 320px; position: relative; }
+.table-toolbar .search input { padding-left: 32px; }
+.table-toolbar .search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--text-faint); }
+.sel-count { font-size: 12px; color: var(--text-soft); }
+
+.dropdown { position: relative; }
+.dropdown-menu {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 40;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  box-shadow: var(--shadow-md); padding: 8px; width: 240px; max-height: 320px; overflow: auto; display: none;
+}
+.dropdown-menu.open { display: block; }
+.dropdown-menu label { display: flex; align-items: center; gap: 8px; padding: 6px 8px; font-size: 12.5px; border-radius: 6px; cursor: pointer; }
+.dropdown-menu label:hover { background: var(--surface-soft); }
+
+.table-scroll { overflow: auto; max-height: 620px; position: relative; }
+table.grid { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 12.5px; white-space: nowrap; }
+table.grid th, table.grid td { padding: 9px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+table.grid thead th {
+  position: sticky; top: 0; z-index: 3; background: var(--surface-soft);
+  font-weight: 700; color: var(--text-soft); font-size: 11.5px; user-select: none;
+  border-bottom: 1.5px solid var(--border);
+}
+table.grid thead th.sortable { cursor: pointer; }
+table.grid thead th .th-in { display: inline-flex; align-items: center; gap: 6px; }
+table.grid thead th .arrow { color: var(--accent); font-size: 10px; }
+table.grid td.num, table.grid th.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.grid tbody tr:hover td { background: #f6f9ff; }
+table.grid tbody tr.selected td { background: var(--accent-soft); }
+
+/* sticky first column (checkbox) + second (Month) */
+table.grid th.sticky-col, table.grid td.sticky-col { position: sticky; z-index: 2; background: var(--surface); }
+table.grid thead th.sticky-col { z-index: 4; background: var(--surface-soft); }
+table.grid .col-check { left: 0; width: 38px; text-align: center; }
+table.grid .col-first { left: 38px; box-shadow: 1px 0 0 var(--border); }
+table.grid tbody tr:hover td.sticky-col { background: #f6f9ff; }
+table.grid tbody tr.selected td.sticky-col { background: var(--accent-soft); }
+
+.th-resize { position: absolute; right: 0; top: 0; height: 100%; width: 6px; cursor: col-resize; }
+
+td.copyable { cursor: copy; }
+td.copyable:hover { outline: 1px dashed #c7d2fe; outline-offset: -3px; }
+
+.badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.badge.high   { background: var(--green-soft);  color: #0f7a37; }
+.badge.medium { background: var(--orange-soft); color: #b26a00; }
+.badge.low    { background: var(--red-soft);    color: #b31d1d; }
+.badge.active { background: var(--green-soft);  color: #0f7a37; }
+.badge.paused { background: var(--gray-badge);  color: #4b5563; }
+.badge.ended  { background: #eef1f5;            color: #6b7280; }
+.badge.deleted{ background: #f3f4f6;            color: #9ca3af; }
+.muted { color: var(--text-faint); }
+
+/* pagination */
+.pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 18px; flex-wrap: wrap; }
+.pagination .pages { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+.page-btn { min-width: 32px; height: 32px; padding: 0 9px; border: 1px solid var(--border); background: var(--surface); border-radius: 8px; cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--text); }
+.page-btn:hover:not(:disabled) { background: var(--surface-soft); }
+.page-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.page-btn:disabled { opacity: .45; cursor: not-allowed; }
+.page-info { font-size: 12.5px; color: var(--text-soft); }
+
+/* skeleton / states */
+.skeleton-row { height: 38px; display: flex; gap: 12px; padding: 8px 12px; }
+.skeleton-cell { flex: 1; border-radius: 6px; background: linear-gradient(90deg, #eef1f5 25%, #f6f8fb 37%, #eef1f5 63%); background-size: 400% 100%; animation: sk 1.3s ease infinite; }
+@keyframes sk { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+.state { padding: 48px 20px; text-align: center; color: var(--text-soft); }
+.state svg { width: 40px; height: 40px; color: var(--text-faint); margin-bottom: 10px; }
+.state h3 { margin: 0 0 4px; font-size: 15px; color: var(--text); }
+.hidden { display: none !important; }
+
+.toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); background: #111827; color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 12.5px; box-shadow: var(--shadow-md); opacity: 0; pointer-events: none; transition: .25s; z-index: 100; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.footnote { color: var(--text-faint); font-size: 11.5px; margin-top: 18px; line-height: 1.6; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1100px) { .charts { grid-template-columns: 1fr; } }
+@media (max-width: 720px) {
+  .header { flex-direction: column; align-items: stretch; }
+  .header .actions { justify-content: flex-end; }
+  .kpi-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .kpi .value { font-size: 19px; }
+}
+
+</style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- ============ HEADER ============ -->
+    <header class="header">
+      <div class="brand">
+        <div class="logo">e</div>
+        <div>
+          <h1>eBay PPC Performance Dashboard</h1>
+          <div class="sub">
+            <span>Reporting Month: <b id="hdr-month">—</b></span>
+            <span>Last Sync: <b id="hdr-sync">—</b></span>
+            <span>Campaigns: <b id="hdr-count">—</b></span>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btn-export-all" title="Export the full filtered &amp; sorted result set">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+          Export CSV
+        </button>
+        <button class="btn primary" id="btn-refresh" title="Reload data from data.js">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+          Refresh
+        </button>
+      </div>
+    </header>
+
+    <!-- ============ KPI CARDS ============ -->
+    <section class="kpi-grid" id="kpi-grid" aria-label="Key performance indicators"></section>
+
+    <!-- ============ FILTER PANEL ============ -->
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Filters</h2>
+        <span class="hint">Filters update the KPI cards, charts, table &amp; pagination</span>
+      </div>
+      <div class="panel-body">
+        <div class="filters">
+          <div class="field"><label for="f-account">Account</label><select id="f-account"></select></div>
+          <div class="field"><label for="f-marketplace">Marketplace</label><select id="f-marketplace"></select></div>
+          <div class="field"><label for="f-status">Campaign Status</label><select id="f-status"></select></div>
+          <div class="field"><label for="f-performance">Performance</label><select id="f-performance"></select></div>
+          <div class="field">
+            <label>ACOS Range (%)</label>
+            <div class="range"><input type="number" id="f-acos-min" placeholder="min" step="0.1" /><span>–</span><input type="number" id="f-acos-max" placeholder="max" step="0.1" /></div>
+          </div>
+          <div class="field">
+            <label>ROAS Range</label>
+            <div class="range"><input type="number" id="f-roas-min" placeholder="min" step="0.1" /><span>–</span><input type="number" id="f-roas-max" placeholder="max" step="0.1" /></div>
+          </div>
+          <div class="field">
+            <label>Date Range (Month)</label>
+            <div class="range"><select id="f-date-min"></select><span>–</span><select id="f-date-max"></select></div>
+          </div>
+          <div class="field">
+            <label for="f-search">Search</label>
+            <input type="text" id="f-search" placeholder="Campaign, Listing ID, SKU, Product Title…" autocomplete="off" />
+          </div>
+          <div class="filter-actions">
+            <button class="btn" id="btn-reset">Reset Filters</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ RECONCILIATION BANNER ============ -->
+    <div id="recon" class="recon ok"></div>
+
+    <!-- ============ CHARTS ============ -->
+    <section class="charts">
+      <div class="chart-card"><div class="panel-head"><h2>Campaign Spend vs Sales</h2><span class="hint">each point = one campaign</span></div><div class="chart-wrap" id="chart-scatter"></div></div>
+      <div class="chart-card"><div class="panel-head"><h2>Performance Distribution</h2><span class="hint">High / Medium / Low</span></div><div class="chart-wrap" id="chart-perf"></div></div>
+      <div class="chart-card"><div class="panel-head"><h2>Campaign Status Distribution</h2><span class="hint">Active / Paused / Ended / Deleted</span></div><div class="chart-wrap" id="chart-status"></div></div>
+      <div class="chart-card"><div class="panel-head"><h2>Top 10 Campaigns by Sales</h2><span class="hint">£ attributed sales</span></div><div class="chart-wrap" id="chart-top-sales"></div></div>
+      <div class="chart-card"><div class="panel-head"><h2>Top 10 Campaigns by Spend</h2><span class="hint">£ ad spend</span></div><div class="chart-wrap" id="chart-top-spend"></div></div>
+      <div class="chart-card"><div class="panel-head"><h2>Monthly Trend</h2><span class="hint">spend vs sales over time</span></div><div class="chart-wrap" id="chart-trend"></div></div>
+    </section>
+
+    <!-- ============ CAMPAIGN PERFORMANCE TABLE ============ -->
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Campaign Performance</h2>
+        <span class="hint" id="tbl-updated">—</span>
+      </div>
+
+      <div class="table-toolbar">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input type="text" id="tbl-search" placeholder="Quick search…" autocomplete="off" />
+        </div>
+        <span class="sel-count" id="sel-count"></span>
+        <div class="grow"></div>
+
+        <label class="sel-count" style="display:flex;gap:6px;align-items:center;">
+          <input type="checkbox" id="auto-refresh" /> Auto-refresh
+        </label>
+
+        <div class="dropdown">
+          <button class="btn sm" id="btn-cols">Columns ▾</button>
+          <div class="dropdown-menu" id="cols-menu"></div>
+        </div>
+
+        <div class="field" style="min-width:auto;">
+          <select id="page-size" title="Rows per page">
+            <option value="25">25 / page</option>
+            <option value="50">50 / page</option>
+            <option value="100">100 / page</option>
+            <option value="250">250 / page</option>
+          </select>
+        </div>
+
+        <button class="btn sm" id="btn-export-view" title="Export the current page (respects filters, sorting &amp; pagination)">Export Current View</button>
+      </div>
+
+      <!-- skeleton -->
+      <div id="tbl-skeleton"></div>
+
+      <!-- error state -->
+      <div id="tbl-error" class="state hidden">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L14.7 3.9a2 2 0 00-3.4 0z"/></svg>
+        <h3>Unable to load dashboard data</h3>
+        <p id="tbl-error-msg" class="muted">data.js was not found. Run <code>python export_data.py</code> to generate it.</p>
+      </div>
+
+      <!-- empty state -->
+      <div id="tbl-empty" class="state hidden">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v16"/></svg>
+        <h3>No campaigns match your filters</h3>
+        <p class="muted">Try widening the date range, clearing the search, or resetting filters.</p>
+      </div>
+
+      <!-- table -->
+      <div class="table-scroll" id="tbl-scroll">
+        <table class="grid" id="tbl">
+          <thead id="tbl-head"></thead>
+          <tbody id="tbl-body"></tbody>
+        </table>
+      </div>
+
+      <!-- pagination -->
+      <div class="pagination">
+        <div class="page-info" id="page-info">—</div>
+        <div class="pages" id="page-controls"></div>
+      </div>
+    </section>
+
+    <p class="footnote" id="footnote"></p>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Data (real, exported from production PostgreSQL by export_data.py) -->
+  <script src="data.js"></script>
+  <!-- Dashboard logic -->
+  <script src="dashboard.js"></script>
+</body>
+</html>

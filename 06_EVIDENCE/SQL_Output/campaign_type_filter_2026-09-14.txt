@@ -1,0 +1,27 @@
+Campaign Type filter — per-type totals, reporting period 2026-06-01 -> 2026-06-30
+Dashboard side: embedded data.js (build 2026-08-03) aggregated exactly as dashboard.js buildRows() + FILTERS.campaignType
+SQL side: live production, read-only, 2026-09-14 (June 2026 is unchanged since the build)
+
+[Advanced (CPC)]  campaigns in dashboard: 587
+   spend                7799.04         7799.04  OK
+   sales               42100.97        42100.97  OK
+   orders                  3172            3172  OK
+   clicks                 43874           43874  OK
+   impressions         20775043        20775043  OK
+[Off-Site]  campaigns in dashboard: 15
+   spend                    0.0             0.0  OK
+   sales                    0.0             0.0  OK
+   orders                     0               0  OK
+   clicks                     0               0  OK
+   impressions                0               0  OK
+[Standard (CPS)]  campaigns in dashboard: 395
+   spend                4713.71         4713.71  OK
+   sales               53359.95        53359.95  OK
+   orders                  3960            3960  OK
+   clicks                 20795           20795  OK
+   impressions         23740857        23740857  OK
+
+Sum of the 3 types: campaigns 997 (dataset 997), spend 12512.75, sales 95460.92
+Types partition the dataset (no campaign lost or double-counted): True
+
+RESULT: PASS

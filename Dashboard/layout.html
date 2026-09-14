@@ -1,0 +1,160 @@
+  <div class="app">
+
+    <!-- ============ HEADER ============ -->
+    <header class="header">
+      <div class="brand">
+        <div class="logo">e</div>
+        <div>
+          <h1>eBay PPC Performance Dashboard</h1>
+          <div class="sub">
+            <span>Reporting Period: <b id="hdr-month">—</b></span>
+            <span>Last Sync: <b id="hdr-sync">—</b></span>
+            <span>Campaigns: <b id="hdr-count">—</b></span>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btn-export-all" title="Export the full filtered &amp; sorted result set for the reporting period">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+          Export CSV
+        </button>
+        <button class="btn primary" id="btn-refresh" title="Reload the dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+          Refresh
+        </button>
+      </div>
+    </header>
+
+    <!-- ============ KPI CARDS ============ -->
+    <section class="kpi-grid" id="kpi-grid" aria-label="Key performance indicators"></section>
+
+    <!-- ============ FILTER PANEL ============ -->
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Filters</h2>
+        <span class="hint">Date Range filters the reporting period (public.ppc_performance.date). Everything updates: KPIs, table, charts, pagination, export.</span>
+      </div>
+      <div class="panel-body">
+        <div class="filters">
+
+          <!-- Reporting Period (presets + custom reporting date range) -->
+          <div class="field wide">
+            <div class="report-head">
+              <label>Reporting Period (Date Range)</label>
+              <span class="report-period" id="report-period">—</span>
+            </div>
+            <div class="preset-group" id="preset-group"></div>
+          </div>
+          <div class="field">
+            <label for="f-date-from">From Date</label>
+            <input type="date" id="f-date-from" />
+          </div>
+          <div class="field">
+            <label for="f-date-to">To Date</label>
+            <input type="date" id="f-date-to" />
+          </div>
+
+          <div class="field"><label for="f-account">Account</label><select id="f-account"></select></div>
+          <div class="field"><label for="f-marketplace">Marketplace</label><select id="f-marketplace"></select></div>
+          <div class="field"><label for="f-campaign-type">Campaign Type</label><select id="f-campaign-type"></select></div>
+          <div class="field"><label for="f-status">Campaign Status</label><select id="f-status"></select></div>
+          <div class="field"><label for="f-performance">Performance</label><select id="f-performance"></select></div>
+          <div class="field">
+            <label>ACOS Range (%)</label>
+            <div class="range"><input type="number" id="f-acos-min" placeholder="min" step="0.1" /><span>–</span><input type="number" id="f-acos-max" placeholder="max" step="0.1" /></div>
+          </div>
+          <div class="field">
+            <label>ROAS Range</label>
+            <div class="range"><input type="number" id="f-roas-min" placeholder="min" step="0.1" /><span>–</span><input type="number" id="f-roas-max" placeholder="max" step="0.1" /></div>
+          </div>
+          <div class="field">
+            <label for="f-search">Search</label>
+            <input type="text" id="f-search" placeholder="Campaign, Listing ID, SKU, Product Title…" autocomplete="off" />
+          </div>
+          <div class="filter-actions">
+            <button class="btn" id="btn-reset">Reset Filters</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ RECONCILIATION BANNER ============ -->
+    <div id="recon" class="recon ok"></div>
+
+    <!-- ============ CAMPAIGN PERFORMANCE TABLE ============ -->
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Campaign Performance</h2>
+        <span class="hint" id="tbl-updated">—</span>
+      </div>
+
+      <div class="table-toolbar">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input type="text" id="tbl-search" placeholder="Quick search…" autocomplete="off" />
+        </div>
+        <span class="sel-count" id="sel-count"></span>
+        <div class="grow"></div>
+
+        <label class="sel-count" style="display:flex;gap:6px;align-items:center;">
+          <input type="checkbox" id="auto-refresh" /> Auto-refresh
+        </label>
+
+        <div class="dropdown">
+          <button class="btn sm" id="btn-cols">Columns ▾</button>
+          <div class="dropdown-menu" id="cols-menu"></div>
+        </div>
+
+        <div class="field" style="min-width:auto;">
+          <select id="page-size" title="Rows per page">
+            <option value="25">25 / page</option>
+            <option value="50">50 / page</option>
+            <option value="100">100 / page</option>
+            <option value="250">250 / page</option>
+          </select>
+        </div>
+
+        <button class="btn sm" id="btn-export-view" title="Export the current page (respects reporting period, filters, sorting &amp; pagination)">Export Current View</button>
+      </div>
+
+      <div id="tbl-skeleton"></div>
+
+      <div id="tbl-error" class="state hidden">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L14.7 3.9a2 2 0 00-3.4 0z"/></svg>
+        <h3>Unable to load dashboard data</h3>
+        <p class="muted">The embedded dataset could not be read.</p>
+      </div>
+
+      <div id="tbl-empty" class="state hidden">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v16"/></svg>
+        <h3>No campaigns match your filters</h3>
+        <p class="muted">Try a wider reporting period, clearing the search, or resetting filters.</p>
+      </div>
+
+      <div class="table-scroll" id="tbl-scroll">
+        <table class="grid" id="tbl">
+          <thead id="tbl-head"></thead>
+          <tbody id="tbl-body"></tbody>
+        </table>
+      </div>
+
+      <div class="pagination">
+        <div class="page-info" id="page-info">—</div>
+        <div class="pages" id="page-controls"></div>
+      </div>
+    </section>
+
+    <!-- ============ CHARTS (below the table) ============ -->
+    <section class="charts">
+      <div class="chart-card"><div class="panel-head"><h2>Campaign Spend vs Sales</h2><span class="hint">each point = one campaign</span></div><div class="chart-wrap" id="chart-scatter"></div></div>
+      <div class="chart-card"><div class="panel-head"><h2>Performance Distribution</h2><span class="hint">High / Medium / Low</span></div><div class="chart-wrap" id="chart-perf"></div></div>
+      <div class="chart-card"><div class="panel-head"><h2>Campaign Status Distribution</h2><span class="hint">Active / Paused / Ended / Deleted</span></div><div class="chart-wrap" id="chart-status"></div></div>
+      <div class="chart-card"><div class="panel-head"><h2>Top 10 Campaigns by Sales</h2><span class="hint">£ attributed sales</span></div><div class="chart-wrap" id="chart-top-sales"></div></div>
+      <div class="chart-card"><div class="panel-head"><h2>Top 10 Campaigns by Ad Spend</h2><span class="hint">£ ad spend</span></div><div class="chart-wrap" id="chart-top-spend"></div></div>
+      <div class="chart-card"><div class="panel-head"><h2>Monthly Sales vs Spend Trend</h2><span class="hint">within the reporting period</span></div><div class="chart-wrap" id="chart-trend"></div></div>
+    </section>
+
+    <p class="footnote" id="footnote"></p>
+  </div>
+
+  <div class="toast" id="toast"></div>

@@ -1,0 +1,14 @@
+Embedded dataset reconciliation (Dashboard/data.js, generated_at 2026-08-03T08:44:04.037684+05:30)
+Check: sum of per-campaign daily facts == sql_totals captured from production at build time (tolerance 0.05)
+
+metric               daily-sum        sql_totals  match
+campaigns                  997               997  True
+active                     331               331  True
+paused                     151               151  True
+spend                319065.82         319065.82  True
+sales               2373474.15        2373474.15  True
+orders                  203255            203255  True
+clicks                 1858976           1858976  True
+impressions          963714869         963714869  True
+
+RESULT: PASS

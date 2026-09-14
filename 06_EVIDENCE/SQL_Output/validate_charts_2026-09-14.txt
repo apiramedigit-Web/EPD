@@ -1,0 +1,44 @@
+==============================================================================
+  eBay PPC Dashboard — CHART / REPORTING-DATE FILTER VALIDATION
+  Reporting date field: public.ppc_performance.date  | ref today: 2026-08-03
+==============================================================================
+
+Preset          From        To              KPI Spend    SQL Spend  Scatter/Act  KPI  Chart
+-----------------------------------------------------------------------------------------------
+_default_last30 2026-07-05  2026-08-03      10,966.16    13,069.80      276/331 FAIL   FAIL
+today           2026-08-03  2026-08-03           3.17       462.31       14/163 FAIL   FAIL
+yesterday       2026-08-02  2026-08-02         106.32       469.19       71/170 FAIL   FAIL
+last7           2026-07-28  2026-08-03       2,028.94     3,079.19      196/249 FAIL   FAIL
+last30          2026-07-05  2026-08-03      10,966.16    13,069.80      276/331 FAIL   FAIL
+thismonth       2026-08-01  2026-08-03         500.90     1,416.90      145/208 FAIL   FAIL
+lastmonth       2026-07-01  2026-07-31      12,318.79    13,506.43      277/329 FAIL   FAIL
+custom_2025-03  2025-03-01  2025-03-31      15,745.17    15,745.17      237/237 FAIL   FAIL
+custom_FULL     2025-01-01  2026-08-03     319,065.82   328,234.01      529/582 FAIL   FAIL
+
+--- Chart-values change across reporting periods (proof charts are filtered) ---
+  today        scatterPts=  14  perf={'High': 1, 'Low': 996}  trendMonths=1
+  last7        scatterPts= 196  perf={'High': 87, 'Medium': 36, 'Low': 874}  trendMonths=2
+  lastmonth    scatterPts= 277  perf={'High': 101, 'Medium': 84, 'Low': 812}  trendMonths=1
+  custom_FULL  scatterPts= 529  perf={'High': 124, 'Medium': 181, 'Low': 692}  trendMonths=10
+
+--- No stale/cached data: Full vs Last-7 chart output hashes ---
+  scatter    differ=True  
+  perf       differ=True  
+  status     differ=False (period-independent: status is a dimension attribute — same by design)
+  topSales   differ=True  
+  topSpend   differ=True  
+  trend      differ=True  
+
+================= VALIDATION REPORT =================
+  KPI         : FAIL
+  Table       : FAIL
+  Charts      : FAIL
+  Filters     : PASS
+  Export      : FAIL
+  Pagination  : FAIL
+  Search      : PASS
+----------------------------------------------------
+  Presets validated : _default_last30, today, yesterday, last7, last30, thismonth, lastmonth, custom_2025-03, custom_FULL
+  Stale-data check   : PASS (5 period charts differ Full vs Last7; status period-independent by design)
+  Export reconciles  : 997 rows, spend 319,065.82 == SQL 319,065.82, sales 2,373,474.15 == SQL 2,373,474.15
+  OVERALL            : FAILURES PRESENT

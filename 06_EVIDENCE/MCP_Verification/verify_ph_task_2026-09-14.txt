@@ -1,0 +1,14 @@
+current on-disk dashboard.html bytes: 3918824
+current base sha256                : 5d5fc4134feea1e9d7e56be73c982ce0f2087d4043b155b23097b6bdf814b95f
+embedded data generated_at         : 2026-08-03T08:44:04.037684+05:30
+
+connected DB: order_management_copy 
+
+id    | user       | sha_match | len_match | CT_html  | CT_js    | no_NA   | data_ts   | updated_at
+----------------------------------------------------------------------------------------------------------------------
+395   | Thinesh    | True      | True      | True     | True     | True    | True      | 2026-08-03 08:51:37+0530
+396   | Jarsini    | True      | True      | True     | True     | True    | True      | 2026-08-03 08:51:37+0530
+397   | kobiga     | True      | True      | True     | True     | True    | True      | 2026-08-21 03:36:58+0530
+398   | powsteena  | True      | True      | True     | True     | True    | True      | 2026-08-03 08:51:37+0530
+
+RESULT: PASS — all 4 rows hold the identical latest validated build
