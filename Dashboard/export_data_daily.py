@@ -20,6 +20,7 @@ import psycopg
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data.js")
 SRC = 2  # eBay
+CUTOFF = dt.date(2026, 9, 30)  # last complete reporting day (1-2 Oct 2026 are partial loads)
 
 DIM_SQL = """
 WITH ebay_campaigns AS (
@@ -34,7 +35,7 @@ WITH ebay_campaigns AS (
 perf_dates AS (
     SELECT parent_id, MIN(date) AS start_date
     FROM public.ppc_performance
-    WHERE source = %(src)s AND record_type IN ('campaign','ad')
+    WHERE source = %(src)s AND record_type IN ('campaign','ad') AND date <= %(cutoff)s
     GROUP BY parent_id
 ),
 top_listing AS (
@@ -44,6 +45,7 @@ top_listing AS (
                     ORDER BY SUM(spend) DESC NULLS LAST, SUM(sales) DESC NULLS LAST, ref_id) rn
         FROM public.ppc_performance
         WHERE source = %(src)s AND record_type='ad' AND ref_id IS NOT NULL AND ref_id <> '0'
+          AND date <= %(cutoff)s
         GROUP BY parent_id, ref_id
     ) r WHERE rn = 1
 ),
@@ -56,36 +58,9 @@ listing_detail AS (
                     ORDER BY (NULLIF(ld.title,'') IS NOT NULL) DESC, ld.is_child DESC NULLS LAST, ld.id) rn
         FROM public.listing_data ld WHERE ld.which_channel = 2 AND ld.wrong_sku = 0
     ) x WHERE rn = 1
-),
-order_title AS (
-    -- eBay titles are absent from listing_data.title for ~98%% of items; fall back to
-    -- the most frequent order-line title per item_id, with the trailing variant
-    -- suffix "[...]" stripped. Restricted to the campaigns' top listings for speed.
-    SELECT ref_id, title FROM (
-        SELECT oii_item_id AS ref_id,
-               regexp_replace(btrim(oii_item_title), '\\s*\\[[^\\]]*\\]\\s*$', '') AS title,
-               ROW_NUMBER() OVER (PARTITION BY oii_item_id
-                    ORDER BY count(*) DESC,
-                             length(regexp_replace(btrim(oii_item_title),'\\s*\\[[^\\]]*\\]\\s*$','')) DESC) rn
-        FROM public.order_item_info
-        WHERE oii_item_id IN (SELECT ref_id FROM top_listing)
-          AND NULLIF(btrim(oii_item_title),'') IS NOT NULL
-        GROUP BY oii_item_id, regexp_replace(btrim(oii_item_title), '\\s*\\[[^\\]]*\\]\\s*$', '')
-    ) z WHERE rn = 1
-),
-order_sku AS (
-    -- Some promoted eBay item_ids are absent from listing_data entirely (no SKU there);
-    -- fall back to the most frequent order-line SKU per item_id from order_item_info.
-    SELECT ref_id, sku FROM (
-        SELECT oii_item_id AS ref_id, btrim(oii_item_sku) AS sku,
-               ROW_NUMBER() OVER (PARTITION BY oii_item_id
-                    ORDER BY count(*) DESC, length(btrim(oii_item_sku)) ASC) rn
-        FROM public.order_item_info
-        WHERE oii_item_id IN (SELECT ref_id FROM top_listing)
-          AND NULLIF(btrim(oii_item_sku),'') IS NOT NULL
-        GROUP BY oii_item_id, btrim(oii_item_sku)
-    ) z WHERE rn = 1
 )
+-- sku / title are listing_data only here; the order-line fallback (ORDER_TITLE_SQL /
+-- ORDER_SKU_SQL, ledsone) is applied in main() with the same COALESCE priority.
 SELECT c.parent_id,
        COALESCE(c.ss_name,'Unknown'),
        COALESCE(c.market_place,'Unknown'),
@@ -95,30 +70,64 @@ SELECT c.parent_id,
                              WHEN 'OFF_SITE' THEN 'Off-Site' END,
        COALESCE(c.record_status,'unknown'),
        COALESCE(tl.ref_id,'N/A'),
-       COALESCE(ld.sku, os.sku, 'N/A'),
-       COALESCE(ld.title, ot.title, 'N/A'),
+       ld.sku,
+       ld.title,
        COALESCE(c.bid,0)::numeric(12,2),
        TO_CHAR(pd.start_date,'YYYY-MM-DD')
 FROM ebay_campaigns c
 LEFT JOIN perf_dates    pd ON pd.parent_id = c.parent_id
 LEFT JOIN top_listing   tl ON tl.parent_id = c.parent_id
 LEFT JOIN listing_detail ld ON ld.ref_id   = tl.ref_id
-LEFT JOIN order_title    ot ON ot.ref_id   = tl.ref_id
-LEFT JOIN order_sku      os ON os.ref_id   = tl.ref_id
 ORDER BY c.parent_id;
+"""
+
+# public.order_item_info no longer exists in order_management_copy; the order-line
+# fallback now reads ledsone order_management.order_item_info (WLP_SOURCE_DB_URL,
+# read-only). Every matched line belongs to an eBay (source_id 2) order.
+ORDER_TITLE_SQL = r"""
+-- eBay titles are absent from listing_data.title for ~98%% of items; fall back to
+-- the most frequent order-line title per item_id, with the trailing variant
+-- suffix "[...]" stripped. Restricted to the campaigns' top listings for speed.
+SELECT ref_id, title FROM (
+    SELECT item_id AS ref_id,
+           regexp_replace(btrim(item_title), '\s*\[[^\]]*\]\s*$', '') AS title,
+           ROW_NUMBER() OVER (PARTITION BY item_id
+                ORDER BY count(*) DESC,
+                         length(regexp_replace(btrim(item_title),'\s*\[[^\]]*\]\s*$','')) DESC,
+                         regexp_replace(btrim(item_title),'\s*\[[^\]]*\]\s*$','') ASC) rn
+    FROM order_management.order_item_info
+    WHERE item_id = ANY(%(refs)s)
+      AND NULLIF(btrim(item_title),'') IS NOT NULL
+    GROUP BY item_id, regexp_replace(btrim(item_title), '\s*\[[^\]]*\]\s*$', '')
+) z WHERE rn = 1
+"""
+
+ORDER_SKU_SQL = r"""
+-- Some promoted eBay item_ids are absent from listing_data entirely (no SKU there);
+-- fall back to the most frequent order-line SKU per item_id from order_item_info.
+SELECT ref_id, sku FROM (
+    SELECT item_id AS ref_id, btrim(item_sku) AS sku,
+           ROW_NUMBER() OVER (PARTITION BY item_id
+                ORDER BY count(*) DESC, length(btrim(item_sku)) ASC, btrim(item_sku) ASC) rn
+    FROM order_management.order_item_info
+    WHERE item_id = ANY(%(refs)s)
+      AND NULLIF(btrim(item_sku),'') IS NOT NULL
+    GROUP BY item_id, btrim(item_sku)
+) z WHERE rn = 1
 """
 
 DAILY_SQL = """
 WITH gp AS (
   SELECT parent_id, MIN(CASE record_type WHEN 'campaign' THEN 0 ELSE 1 END) pref
   FROM public.ppc_performance WHERE source=%(src)s AND record_type IN ('campaign','ad')
+    AND date <= %(cutoff)s
   GROUP BY parent_id
 )
 SELECT pp.parent_id, pp.date,
        SUM(pp.impressions)::bigint, SUM(pp.clicks)::bigint,
        SUM(pp.spend)::numeric(14,2), SUM(pp.sales)::numeric(14,2), SUM(pp.orders)::numeric(14,0)
 FROM public.ppc_performance pp JOIN gp ON gp.parent_id = pp.parent_id
-WHERE pp.source=%(src)s
+WHERE pp.source=%(src)s AND pp.date <= %(cutoff)s
   AND ((gp.pref=0 AND pp.record_type='campaign') OR (gp.pref=1 AND pp.record_type='ad'))
 GROUP BY pp.parent_id, pp.date;
 """
@@ -137,6 +146,7 @@ perf_by_grain AS (
            SUM(impressions) impressions, SUM(clicks) clicks,
            SUM(spend) spend, SUM(sales) sales, SUM(orders) orders
     FROM public.ppc_performance WHERE source=%(src)s AND record_type IN ('campaign','ad')
+      AND date <= %(cutoff)s
     GROUP BY parent_id, record_type
 ),
 perf_metrics AS (
@@ -180,21 +190,33 @@ def main():
     with psycopg.connect(os.environ["DATABASE_URL"]) as conn, conn.cursor() as cur:
         cur.execute("SELECT now()"); generated_at = cur.fetchone()[0].isoformat()
 
-        cur.execute(DIM_SQL, {"src": SRC})
+        cur.execute(DIM_SQL, {"src": SRC, "cutoff": CUTOFF})
         dim_rows = cur.fetchall()
+
+        # order-line Title/SKU fallback for the campaigns' top listings (ledsone, read-only)
+        refs = sorted({r[6] for r in dim_rows if r[6] != "N/A"})
+        with psycopg.connect(os.environ["WLP_SOURCE_DB_URL"]) as lconn:
+            lconn.read_only = True
+            with lconn.cursor() as lcur:
+                lcur.execute(ORDER_TITLE_SQL, {"refs": refs}); order_title = dict(lcur.fetchall())
+                lcur.execute(ORDER_SKU_SQL, {"refs": refs});   order_sku = dict(lcur.fetchall())
+
         pid_index = {}
         dim = []
         for i, r in enumerate(dim_rows):
             pid_index[r[0]] = i
+            r = list(r)
+            r[7] = r[7] or order_sku.get(r[6]) or "N/A"     # SKU: listing_data -> order line -> N/A
+            r[8] = r[8] or order_title.get(r[6]) or "N/A"   # Title: listing_data -> order line -> N/A
             dim.append([num(v) for v in r[1:]])   # DIM_COLS order
 
-        cur.execute(TOTALS_SQL, {"src": SRC})
+        cur.execute(TOTALS_SQL, {"src": SRC, "cutoff": CUTOFF})
         t = cur.fetchone()
         sql_totals = {"campaigns": int(t[0]), "active": int(t[1]), "paused": int(t[2]),
                       "spend": num(t[3]), "sales": num(t[4]), "orders": num(t[5]),
                       "clicks": int(t[6]), "impressions": int(t[7])}
 
-        cur.execute(DAILY_SQL, {"src": SRC})
+        cur.execute(DAILY_SQL, {"src": SRC, "cutoff": CUTOFF})
         fact = cur.fetchall()
 
     # build sorted date list + index
@@ -228,7 +250,8 @@ def main():
             "today_date": all_dates[-1],                 # reference "today" = latest reporting date
             "default_preset": "last30",
             "dates_count": len(all_dates),
-            "source_tables": ["public.ppc","public.ppc_performance","public.listing_data"],
+            "source_tables": ["public.ppc","public.ppc_performance","public.listing_data",
+                              "ledsone.order_management.order_item_info"],
             "currency_note": "Values are in each marketplace's native currency (GBP/EUR/USD); not FX-normalised.",
         },
         "sql_totals": sql_totals,                        # full-window integrity check
